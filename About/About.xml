@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <name>Progression Agriculture - Vanilla Outposts Farming Patch</name>
+  <author>DanZinagri</author>
+  <packageId>danzinagri.progressionagriculture.voefarmingpatch</packageId>
+  <supportedVersions>
+    <li>1.6</li>
+  </supportedVersions>
+  <loadAfter>
+    <li>ferny.progressionagriculture</li>
+    <li>vanillaexpanded.outposts</li>
+  </loadAfter>
+  <description>Compatibility patch: makes Vanilla Outposts Expanded farming outpost choices obey Progression: Agriculture crop/seed unlocks.</description>
+</ModMetaData>

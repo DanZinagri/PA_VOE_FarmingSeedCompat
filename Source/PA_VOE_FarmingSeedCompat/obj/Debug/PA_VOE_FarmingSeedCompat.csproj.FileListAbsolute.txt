@@ -1,0 +1,4 @@
+E:\SteamLibrary\steamapps\common\RimWorld\Mods\PA_VOE_FarmingSeedCompat\1.6\Assemblies\PA_VOE_FarmingSeedCompat.dll
+E:\SteamLibrary\steamapps\common\RimWorld\Mods\PA_VOE_FarmingSeedCompat\Source\PA_VOE_FarmingSeedCompat\obj\Debug\PA_VOE_FarmingSeedCompat.csproj.AssemblyReference.cache
+E:\SteamLibrary\steamapps\common\RimWorld\Mods\PA_VOE_FarmingSeedCompat\Source\PA_VOE_FarmingSeedCompat\obj\Debug\PA_VOE_FarmingSeedCompat.csproj.CoreCompileInputs.cache
+E:\SteamLibrary\steamapps\common\RimWorld\Mods\PA_VOE_FarmingSeedCompat\Source\PA_VOE_FarmingSeedCompat\obj\Debug\PA_VOE_FarmingSeedCompat.dll
