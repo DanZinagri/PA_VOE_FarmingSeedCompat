@@ -74,6 +74,10 @@
       <HintPath>..\..\..\..\RimWorldWin64_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="VFEC">
+      <HintPath>..\..\..\..\..\..\workshop\content\294100\2787850474\1.6\Assemblies\VFEC.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="VOE">
       <HintPath>..\..\..\..\..\..\workshop\content\294100\2688941031\1.6\Assemblies\VOE.dll</HintPath>
       <Private>False</Private>

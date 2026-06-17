@@ -8,14 +8,38 @@ using UnityEngine;
 using Verse;
 using VOE;
 
-namespace BigMarabill.ProgressionAgricultureVOEFarmingPatch
+namespace danzinagri.ProgressionAgricultureVOEFarmingPatch
 {
     [StaticConstructorOnStartup]
     public static class ModStartup
     {
         static ModStartup()
         {
-            new Harmony("danzinagri.progressionagriculture.voefarmingpatch").PatchAll();
+            var harmony = new Harmony("danzinagri.progressionagriculture.voefarmingpatch");
+
+            harmony.PatchAll();
+
+            PatchVFECFarmingOutpost(harmony);
+        }
+
+        private static void PatchVFECFarmingOutpost(Harmony harmony)
+        {
+            var targetType = AccessTools.TypeByName("VFEC.Outposts.Outpost_Farming");
+
+            if (targetType == null)
+                return;
+
+            var targetMethod = AccessTools.Method(targetType, "GetExtraOptions");
+
+            if (targetMethod == null)
+                return;
+
+            var postfix = new HarmonyMethod(
+                typeof(VFEC_OutpostFarming_GetExtraOptions_Patch),
+                nameof(VFEC_OutpostFarming_GetExtraOptions_Patch.Postfix)
+            );
+
+            harmony.Patch(targetMethod, postfix: postfix);
         }
     }
 
@@ -24,10 +48,25 @@ namespace BigMarabill.ProgressionAgricultureVOEFarmingPatch
     {
         public static void Postfix(ref IEnumerable<ResultOption> __result)
         {
-            __result = __result.Where(IsProgressionAgricultureUnlocked).ToList();
+            __result = __result
+                .Where(OutpostFarmingCropFilter.IsProgressionAgricultureUnlocked)
+                .ToList();
         }
+    }
 
-        private static bool IsProgressionAgricultureUnlocked(ResultOption option)
+    public static class VFEC_OutpostFarming_GetExtraOptions_Patch
+    {
+        public static void Postfix(ref IEnumerable<ResultOption> __result)
+        {
+            __result = __result
+                .Where(OutpostFarmingCropFilter.IsProgressionAgricultureUnlocked)
+                .ToList();
+        }
+    }
+
+    public static class OutpostFarmingCropFilter
+    {
+        public static bool IsProgressionAgricultureUnlocked(ResultOption option)
         {
             if (option?.Thing is not ThingDef harvestedThing)
                 return true;

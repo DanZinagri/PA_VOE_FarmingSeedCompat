@@ -9,6 +9,7 @@
   <loadAfter>
     <li>ferny.progressionagriculture</li>
     <li>vanillaexpanded.outposts</li>
+    <li>oskarpotocki.vfe.classical</li>
   </loadAfter>
   <description>Compatibility patch: makes Vanilla Outposts Expanded farming outpost choices obey Progression: Agriculture crop/seed unlocks.</description>
 </ModMetaData>
