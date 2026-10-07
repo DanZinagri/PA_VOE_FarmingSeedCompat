@@ -1,10 +1,9 @@
-﻿using HarmonyLib;
+using HarmonyLib;
 using Outposts;
 using ProgressionAgriculture;
 using RimWorld;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 using Verse;
 using VOE;
 
@@ -13,9 +12,18 @@ namespace danzinagri.ProgressionAgricultureVOEFarmingPatch
     [StaticConstructorOnStartup]
     public static class ModStartup
     {
+        public const string HarmonyId = "danzinagri.progressionagriculture.voefarmingpatch";
+
         static ModStartup()
         {
-            var harmony = new Harmony("danzinagri.progressionagriculture.voefarmingpatch");
+            // This DLL ships both as a standalone mod and bundled inside
+            // Progression: Agriculture ("Mods and Shit/VE Outposts"). If both
+            // copies are loaded, only the first one should patch, otherwise
+            // every outpost option list is filtered twice.
+            if (Harmony.HasAnyPatches(HarmonyId))
+                return;
+
+            var harmony = new Harmony(HarmonyId);
 
             harmony.PatchAll();
 
@@ -48,9 +56,7 @@ namespace danzinagri.ProgressionAgricultureVOEFarmingPatch
     {
         public static void Postfix(ref IEnumerable<ResultOption> __result)
         {
-            __result = __result
-                .Where(OutpostFarmingCropFilter.IsProgressionAgricultureUnlocked)
-                .ToList();
+            __result = OutpostFarmingCropFilter.FilterUnlocked(__result);
         }
     }
 
@@ -58,26 +64,77 @@ namespace danzinagri.ProgressionAgricultureVOEFarmingPatch
     {
         public static void Postfix(ref IEnumerable<ResultOption> __result)
         {
-            __result = __result
-                .Where(OutpostFarmingCropFilter.IsProgressionAgricultureUnlocked)
-                .ToList();
+            __result = OutpostFarmingCropFilter.FilterUnlocked(__result);
         }
     }
 
     public static class OutpostFarmingCropFilter
     {
+        // harvestedThingDef -> the highest-yield ground-sowable plant that
+        // produces it. This mirrors the grouping VOE/VFEC Outpost_Farming does
+        // in GetExtraOptions, so the plant we check for an unlock is the same
+        // plant the outpost would actually grow.
+        //
+        // Built once on first use. GetExtraOptions is re-evaluated every frame
+        // while a farming outpost is selected (Outpost_ChooseResult.ResultOptions
+        // calls it from the inspect string and gizmos), so scanning
+        // DefDatabase<ThingDef> per option per frame was the perf spike.
+        private static Dictionary<ThingDef, ThingDef> plantByHarvestedThing;
+
+        private static Dictionary<ThingDef, ThingDef> PlantByHarvestedThing
+        {
+            get
+            {
+                if (plantByHarvestedThing == null)
+                    BuildCache();
+
+                return plantByHarvestedThing;
+            }
+        }
+
+        private static void BuildCache()
+        {
+            var cache = new Dictionary<ThingDef, ThingDef>();
+
+            foreach (ThingDef def in DefDatabase<ThingDef>.AllDefsListForReading)
+            {
+                if (def.category != ThingCategory.Plant)
+                    continue;
+
+                PlantProperties plant = def.plant;
+
+                if (plant?.harvestedThingDef == null)
+                    continue;
+
+                if (plant.sowTags == null || !plant.sowTags.Contains("Ground"))
+                    continue;
+
+                if (!cache.TryGetValue(plant.harvestedThingDef, out ThingDef best)
+                    || plant.harvestYield > best.plant.harvestYield)
+                {
+                    cache[plant.harvestedThingDef] = def;
+                }
+            }
+
+            plantByHarvestedThing = cache;
+        }
+
+        public static IEnumerable<ResultOption> FilterUnlocked(IEnumerable<ResultOption> options)
+        {
+            if (options == null)
+                return options;
+
+            return options.Where(IsProgressionAgricultureUnlocked).ToList();
+        }
+
         public static bool IsProgressionAgricultureUnlocked(ResultOption option)
         {
-            if (option?.Thing is not ThingDef harvestedThing)
+            ThingDef harvestedThing = option?.Thing;
+
+            if (harvestedThing == null)
                 return true;
 
-            ThingDef plantDef = DefDatabase<ThingDef>.AllDefs
-                .Where(d => d.category == ThingCategory.Plant
-                    && d.plant?.harvestedThingDef == harvestedThing
-                    && d.plant.sowTags.Contains("Ground"))
-                .MaxBy(d => d.plant.harvestYield);
-
-            if (plantDef == null)
+            if (!PlantByHarvestedThing.TryGetValue(harvestedThing, out ThingDef plantDef))
                 return true;
 
             var tracker = GameComponent_UnlockedCrops.Instance;
